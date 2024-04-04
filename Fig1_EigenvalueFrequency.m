@@ -77,7 +77,7 @@ Adja_L_norm = Adja_L./norm(Adja_L,'fro');
 Adja_R_norm = Adja_R./norm(Adja_R,'fro');
 L_adja_L = graph_laplacian(Adja_L_norm,'normalized');
 L_adja_R = graph_laplacian(Adja_R_norm,'normalized');
-SC_ev_roughness = mean([vecnorm(L_adja_L*SC_U_template(LH,:))', vecnorm(L_adja_R*SC_U_template(RH,:))'],2);
+SC_ev_roughness = mean([vecnorm(L_adja_L*SC_U_consensus(LH,:))', vecnorm(L_adja_R*SC_U_consensus(RH,:))'],2);
 
 % threshold:
 thresh = 1e-3;

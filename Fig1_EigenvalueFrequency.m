@@ -67,12 +67,20 @@ BNV_surface_and_nodes(SC_U_consensus(15:end, idx), 'Schaefer_200.nii.gz', [], su
 load(sprintf('Schaefer%d_Adjacency.mat',scale));
 
 Adja_norm = Adja./norm(Adja,'fro');
-[L_adja, Adja_U, Adja_ev] = graph_laplacian(Adja_norm,'normalized');
+
+LH = (14+1):(14+(scale/2));
+RH = (14+(scale/2)+1):(scale+14);
+
+Adja_L = Adja(LH, LH);
+Adja_R = Adja(RH, RH);
+Adja_L_norm = Adja_L./norm(Adja_L,'fro');
+Adja_R_norm = Adja_R./norm(Adja_R,'fro');
+L_adja_L = graph_laplacian(Adja_L_norm,'normalized');
+L_adja_R = graph_laplacian(Adja_R_norm,'normalized');
+SC_ev_roughness = mean([vecnorm(L_adja_L*SC_U_template(LH,:))', vecnorm(L_adja_R*SC_U_template(RH,:))'],2);
 
 % threshold:
 thresh = 1e-3;
-
-SC_ev_roughness = vecnorm(L_adja*SC_U_consensus)';
 
 SC_ev_zeroX = zeros(nroi,1);
 SC_ev_sparsity = zeros(nroi,1);

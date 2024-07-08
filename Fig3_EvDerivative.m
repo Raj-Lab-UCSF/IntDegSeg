@@ -461,6 +461,14 @@ set(FIG, 'Position',[1,49,1920,955]);
 
 %% Correlation Coefficients:
 
+load('PreComputed_Data\InterSubjectAgreement_Scale-200_Results.mat');
+Agreement_median = median(U_Scales_IndVar.UU_diag_matched2tmp)';
+
+disp('Agreement:')
+[r, p] = corr(ev_deriv(int_range), Agreement_median(int_range))
+[r, p] = corr(ev_deriv(deg_range), Agreement_median(deg_range))
+[r, p] = corr(ev_deriv(seg_range), Agreement_median(seg_range))
+
 disp('Roughness:')
 [r, p] = corr(ev_deriv(int_range), SC_ev_roughness_median(int_range))
 [r, p] = corr(ev_deriv(deg_range), SC_ev_roughness_median(deg_range))

@@ -37,8 +37,7 @@ L = zeros(n_subjects,1);
 for i = 1:n_subjects
 
     SC = SC_all(:,:,i);
-    % [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'normalized');
-    [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'randomwalk');
+    [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'normalized');
 
     [U_all_matched(:,:,i), matched_order_all(:,i)] = match_eigs(U_all(:,:,i), SC_U_consensus);
 
@@ -96,8 +95,12 @@ U_Scales_IndVar.all_combo_kendall_tau_corr = all_combo_kendall_tau_corr;
 U_Scales_IndVar.permutation_length = permutation_length;
 U_Scales_IndVar.L = L;
 
+% save('PreComputed_Data\InterSubjectAgreement_Scale-200_Results.mat');
 
 %% View Matching
+
+% load('PreComputed_Data\InterSubjectAgreement_Scale-200_Results.mat');
+
 sub = 1;
 
 FIG = figure();

@@ -7,8 +7,8 @@ rng('shuffle','twister');
 
 U_Scales_Noise = struct('scale',[],'noise_sigma',[],'UU_diag_SC_vs_SCnoisy_all',[],'all_combo_diagonals',[]);
 
-
-std_multiplier_list = 0:2.5e-4:1;
+d = 2.5e-4;
+std_multiplier_list = 0:2.5e-4:0.05;
 var_multiplier_list = std_multiplier_list.^2;
 k_multipliers = length(std_multiplier_list);
 
@@ -60,14 +60,14 @@ for k = 2:k_multipliers
     
 end
 
-save(sprintf('U_Scale-%d_RicianNoise_VFinal.mat',scale),'UU_diag_SC_vs_SCnoisy_all','std_multiplier_list','var_multiplier_list','k_multipliers' ,'SC_template','SC_U_template','SC_ev_template');
+% save('PreComputed_Data/Stability_Analysis_Results.mat','UU_diag_SC_vs_SCnoisy_all','std_multiplier_list','var_multiplier_list','k_multipliers' ,'SC_template','SC_U_template','SC_ev_template');
 
 
 %% Similarity by regime
 
-% load(sprintf('PreComputed_Data/U_Scale-200_RicianNoise_VFinal.mat',scale))
+% load('PreComputed_Data/Stability_Analysis_Results.mat');
 
-n_subjects = 50;
+n_subjects = length(MICA);
 
 % % From EV Regime Consensus:
 int_range = 1:26;
@@ -80,7 +80,7 @@ seg_color = [0.9, 0.3, 0.9];
 
 mean_SC_weight = mean(nonzeros(triu(SC_template,1)));
 
-k_multipliers = 201;
+k_multipliers = 10;
 
 Perturb_Int = zeros(n_subjects, k_multipliers);
 Perturb_Deg = zeros(n_subjects, k_multipliers);
@@ -104,7 +104,7 @@ plot_iqr(std_multiplier_list(1:k_multipliers), Perturb_Deg, 'median', deg_color,
 plot_iqr(std_multiplier_list(1:k_multipliers), Perturb_Seg, 'median', seg_color, true, 0.8);
 
 
-xline(mean_SC_weight, 'k--', 'Mean SC weight' ,'LineWidth',2);
+xline(mean_SC_weight, 'k--','LineWidth',2);
 
 hold off;
 box on;
@@ -117,10 +117,7 @@ ylabel('Perturbation Similarity');
 set(FIG, 'Position',[1,49,1920,955]);
 
 
-
-%% Compute Stability as linear approximation of initial slope
-
-nroi = 214;
+%% Compute Stability
 
 customFit = fittype('m*x + 1', 'independent', 'x', 'dependent', 'y');
 
@@ -129,15 +126,15 @@ options = fitoptions('Method', 'NonlinearLeastSquares', ...
                      'Lower', [-Inf], ...    % lower bounds for [a, b]
                      'Upper', [0]);      % upper bounds for [a, b]
 
-k = 5; %Use first 5 perturbations for linear fit
+k = 9; %67 = 1/3*201
 x = std_multiplier_list(1:k)';
 
-max_dPS_dP_lin = zeros(50,214);
+max_dPS_dP_lin = zeros(n_subjects,214);
 
-for sub = 1:50
+for sub = 1:n_subjects
     for i = 1:nroi
 
-        F0 = fit(x, squeeze(UU_diag_SC_vs_SCnoisy_all(sub,i,1:k)), customFit, options);
+        F0 = fit(x, log(squeeze(UU_diag_SC_vs_SCnoisy_all(sub,i,1:k))), customFit, options);
         max_dPS_dP_lin(sub,i) = F0.m;
 
     end
@@ -145,10 +142,6 @@ end
 
 
 %% Visualize Stability Across Harmonics:
-
-nroi = 214;
-n_subjects = 50;
-scale = 200;
 
 [~, ~, ev_deriv] = find_ev_IntDegSeg(SC_ev_template,'1deriv');
 
@@ -182,6 +175,7 @@ xline(int_range(end)+0.5, 'k--', 'LineWidth',lw);
 xline(deg_range(end)+0.5, 'k--', 'LineWidth',lw);
 ax1.Box = 'off';
 ax1.XLim = [0 220];
+ax1.YLim = [-1800 -600];
 axis square;
 hold off;
 
@@ -201,15 +195,15 @@ set(FIG, 'Position',[1,49,1920,955]);
 ax1.YLabel = ylabel('Perturbation Derivative Maximum');
 ax2.YLabel = ylabel('Eigenvalue Derivative');
 title('Stability of Harmonics');
-xlabel({'','Eigenmode Index'})
+xlabel({'','Eigenmode Index'});
 
 
 %% Stability vs Gap-Spectrum Histogram and Scatter Plot
 
-r = zeros(50,1); p = r; sz = 20;
-r_int = zeros(50,1); p_int = r; 
-r_deg = zeros(50,1); p_deg = r; 
-r_seg = zeros(50,1); p_seg = r; 
+r = zeros(n_subjects,1); p = r; sz = 20;
+r_int = zeros(n_subjects,1); p_int = r; 
+r_deg = zeros(n_subjects,1); p_deg = r; 
+r_seg = zeros(n_subjects,1); p_seg = r; 
 
 FIG = figure(); hold on;
 for i = 1:n_subjects
@@ -225,7 +219,7 @@ for i = 1:n_subjects
 
 end
 % % Template Derivative:
-ev_deriv_rep = repmat(ev_deriv,50,1);
+ev_deriv_rep = repmat(ev_deriv,n_subjects,1);
 X = [ones(size(ev_deriv_rep)), ev_deriv_rep]; % Design matrix
 
 max_dPS_dP_transpose = max_dPS_dP_lin';
@@ -239,7 +233,7 @@ title('All Subjects dLambda vs dPS');
 xlabel('EV Deriv');
 ylabel('dPS/dP');
 set(FIG, 'Position',[1,49,1920,955]);
-ylim([-1200, 0])
+ylim([-1800, -600]);
 
 
 %
@@ -252,9 +246,9 @@ median_max_dPS_dP = median(max_dPS_dP_lin)';
 cmap = summer(3);
 
 FIG = figure();
-% h = histogram(r);
-h = histogram(r, 0.5:0.02:0.75); xlim([0.5, 0.75]);
-ylim([0,15]);
+h = histogram(r);
+h = histogram(r, 0.575:0.025:0.75);
+ylim([0,25]);
 p5 = xline(mean(r), 'k--');%,sprintf('mean=%0.2f', mean(r)));
 p5.LineWidth = lw;
 h.FaceColor = cmap(2,:);
@@ -263,6 +257,7 @@ set(FIG, 'Position',[1,49,1920,955]);
 title('Histogram of individual correlations');
 xlabel("Pearson's Correlation");
 ylabel('Subject Count');
+
 
 
 %% Some extra plots...

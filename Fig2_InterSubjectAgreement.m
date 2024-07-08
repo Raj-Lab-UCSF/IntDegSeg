@@ -21,8 +21,9 @@ end
 clear MICA;
 
 SC_consensus = mean(SC_all,3);
-[~, SC_U_consensus, SC_ev_consensus] = graph_laplacian(SC_consensus, 'normalized');
-
+% [~, SC_U_consensus, SC_ev_consensus] = graph_laplacian(SC_consensus, 'normalized');
+[~, SC_U_consensus, SC_ev_consensus] = graph_laplacian(SC_consensus, 'randomwalk');
+%%
 
 U_all = zeros(nroi,nroi,n_subjects);
 U_all_matched = zeros(nroi,nroi,n_subjects);
@@ -36,7 +37,8 @@ L = zeros(n_subjects,1);
 for i = 1:n_subjects
 
     SC = SC_all(:,:,i);
-    [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'normalized');
+    % [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'normalized');
+    [~, U_all(:,:,i), ev_sub] = graph_laplacian(SC, 'randomwalk');
 
     [U_all_matched(:,:,i), matched_order_all(:,i)] = match_eigs(U_all(:,:,i), SC_U_consensus);
 
@@ -126,23 +128,25 @@ nroi = size(all_combo_diagonals,2);
 
 X = 1:nroi;
 
+cmap = [0, 0.5, 0.4];
+
 FIG = figure();
 subplot(3,1,1); 
-plot_iqr(X, all_combo_diagonals, 'median', [1 0 0.25], true, 0.6);
+plot_iqr(X, all_combo_diagonals, 'median', cmap, true, 0.8);
 title('How similar are Individuals to each other? (Unmatched To consensus)');
 xlabel('Eigenvector Index');
 ylabel('UU Diagonal');
 xlim([0, scale+20]);
 
 subplot(3,1,2);
-plot_iqr(X, all_combo_diagonals_matched2TMP, 'median', [1 0 0.25], true, 0.6);
+plot_iqr(X, all_combo_diagonals_matched2TMP, 'median', cmap, true, 0.8);
 title('How similar are Individuals to each other? (Matched To consensus)');
 xlabel('Eigenvector Index');
 ylabel('UU Diagonal');
 xlim([0, scale+20]);
 
 subplot(3,1,3);
-plot_iqr(X, all_combo_diagonals_matched2IND, 'median', [1 0 0.25], true, 0.6);
+plot_iqr(X, all_combo_diagonals_matched2IND, 'median', cmap, true, 0.8);
 title('How similar are Individuals to each other? (Subs Matched 1-to-1)');
 xlabel('Eigenvector Index');
 ylabel('UU Diagonal');
@@ -154,9 +158,14 @@ set(FIG, 'Position', [465,50,937,946]);
 
 %% Permutation Lengths and Kendall Tau:
 
+% scale = 200;
+permutation_length= U_Scales_IndVar.permutation_length;
+kendall_tau_corr= U_Scales_IndVar.kendall_tau_corr;
+
+
 FIG = figure();
 subplot(2,1,1);
-plot_iqr(1:(scale+14), permutation_length, 'median', [0 0.4 0.8], true, 0.6);
+plot_iqr(1:(size(permutation_length,1)), permutation_length', 'median', [0 0.4 0.8], true, 0.6);
 xlim([0, scale+20]);
 title('Permutation Length Per Harmonic');
 xlabel('Eigenvector Index');
@@ -164,8 +173,8 @@ ylabel('Perm Length');
 
 subplot(2,1,2);
 histogram(kendall_tau_corr);
+% ylim([0, 20]);
 title('Kendalls Tau Permutation Distance');
 xlabel('Permutation Distance');
 ylabel('Number of Subjects');
 set(FIG, 'Position', [465,50,937,946]);
-

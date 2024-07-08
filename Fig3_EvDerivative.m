@@ -46,11 +46,10 @@ for i = 1:n_subjects
 
     [~, U, ev] = graph_laplacian(SC_all(:,:,i), 'normalized');
 
-    
     [ev_changepts, ~, ~, ~] = find_ev_IntDegSeg(ev, '2deriv', 3, 10);
+    % [ev_changepts] = find_ev_IntDegSeg(ev, 'deriv_plateau', 3, 10, 0.0005);
+    % [ev_changepts] = find_ev_IntDegSeg(ev, '2deriv_zeroX', 3, 10);
 
-
-    
     IntDegSeg_sub_assigment = zeros(3,nroi);
     IntDegSeg_sub_assigment(1,1:(ev_changepts(1)-1)) = 1;
     IntDegSeg_sub_assigment(2,ev_changepts(1):(ev_changepts(2)-1)) = 1;
@@ -158,15 +157,18 @@ set(ax2, 'XTickLabel',[]);
 
 xline([int_range_bound, seg_range_bound], '--k', 'LineWidth',3);
 
-
-
+%%
 FIG = figure();
 p3 = plot(1:nroi, ev_2deriv);
 p3.Color = fit_color;
 p3.LineWidth = lw;
+xlim([0, scale+20]);
 ylabel('2nd Order Gap-Spectrum');
 xlabel('Eigenmode Index');
 title('Second-Order Gap-Spectrum');
+set(FIG, 'Position',[450,338,980,532]);
+xline([int_range_bound, seg_range_bound], '--k', 'LineWidth',3);
+% exportgraphics(FIG, 'Figures\Fig4_EVDerivative\2nd_Order_Gap_Spectrum.png','Resolution',600);
 
 
 %% % Find Zerocrossrate, entropy, min-cut-max-flow, and sparsity
@@ -174,8 +176,16 @@ title('Second-Order Gap-Spectrum');
 load(sprintf('Schaefer%d_Adjacency.mat',scale));
 
 Adja_norm = Adja./norm(Adja,'fro');
-L_adja = graph_laplacian(Adja_norm,'normalized');
 
+LH = (14+1):(14+(scale/2));
+RH = (14+(scale/2)+1):(scale+14);
+
+Adja_L = Adja(LH, LH);
+Adja_R = Adja(RH, RH);
+Adja_L_norm = Adja_L./norm(Adja_L,'fro');
+Adja_R_norm = Adja_R./norm(Adja_R,'fro');
+L_adja_L = graph_laplacian(Adja_L_norm,'normalized');
+L_adja_R = graph_laplacian(Adja_R_norm,'normalized');
 
 thresh = 1e-3;
 
@@ -192,8 +202,8 @@ for sub = 1:n_subjects
 
     [SC_U_matched, sigma] = match_eigs(SC_U, SC_U_consensus);
 
-
-    SC_ev_roughness(:,sub) = vecnorm(L_adja*SC_U_matched)';
+    SC_ev_roughness(:,sub) =  mean([vecnorm(L_adja_L*SC_U_matched(LH,:))', vecnorm(L_adja_R*SC_U_matched(RH,:))'],2);
+    
 
     SC_ev_mincut(:,sub) = ev_zeroXings(SC, SC_U_matched, thresh);
 

@@ -5,7 +5,7 @@
 scale = 200;
 
 filename = sprintf('MICA_schaefer%d_SCFC_struct.mat',scale);
-
+% filename = sprintf('MICA_HCP_schaefer%d_SCFC_struct.mat',scale);
 load(filename);
 
 n_subjects = length(MICA);
@@ -13,17 +13,14 @@ nroi = length(MICA(1).SC);
 
 SC_all = zeros(nroi,nroi, n_subjects);
 SC_ev_all = zeros(n_subjects,nroi);
-FC_all = zeros(nroi,nroi, n_subjects);
 
 for i = 1:n_subjects
     SC = MICA(i).SC;
     SC = SC./norm(SC,'fro');
     SC_all(:,:,i) = SC;
     [~, ~, SC_ev_all(i,:)] = graph_laplacian(SC, 'normalized');
-
-    FC_all(:,:,i) = MICA(i).FC;
 end
-clear MICA;
+% clear MICA;
 
 SC_consensus = mean(SC_all,3);
 [SC_L, SC_U_consensus, SC_ev_consensus] = graph_laplacian(SC_consensus, 'normalized');
@@ -55,7 +52,7 @@ set(FIG, 'Position',[1,49,1920,955]);
 
 %% Visualize Harmonics (Requires BrainNet Viewer)
 
-idx = 2;
+idx = 4;
 surface_node_idx = ones(200,1);
 config_file = 'BrainNet_Config_full_surface_and_node.mat';
 save_name = ['Consensus_Harmonic_' num2str(idx)];
@@ -89,7 +86,7 @@ SC_ev_mincut = ev_zeroXings(SC_consensus, SC_U_consensus, thresh);
 for i = 1:nroi
 
     evec = SC_U_consensus(:,i);
-    
+
     evec_thresh = evec;
     evec_thresh(abs(evec_thresh) <=thresh) = 0;
 

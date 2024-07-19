@@ -5,9 +5,6 @@ function FilteredNetwork = filterHarmonics(A, weights, sigma, rm_neg)
 % 
 %   Inputs:
 %       A: a network's adjacency matrix (must be square and symmetric).
-%           OR
-%          a 3D matrix where A(:,:,1) are Laplacian eigenvectors and 
-%          A(:,:,2) is a diagonal matrix of the associated eigenvalues.
 % 
 %       weights: a vector the same length as A defining one of two possible
 %       filtring schemes
@@ -48,47 +45,35 @@ if ~exist('rm_neg','var') || isempty(rm_neg)
     rm_neg = true;
 end
 
-if length(sz) == 3 && sz(3) == 2
-    U = A(:,:,1);
-    ev = diag(A(:,:,2));
 
-elseif issymmetric(A)
-
-    if nargin < 3 || isempty(sigma)
-        sigma = 1:nroi;
-    end
-    
-    D = sum(A, 1);
-    nroi = length(D);
-    sqrt_D_inv = diag(1./sqrt(D));
-    sqrt_D = diag(sqrt(D));
-    
-    L = eye(nroi) - sqrt_D_inv * A * sqrt_D_inv ;
-    
-    [U, ev] = eig(L);
-    ev = diag(ev);
-    [~, ii] = sort(ev, 'ascend');
-    ev = ev(ii);
-    ev = ev(sigma);
-    U = U(:,ii);
-    U = U(:, sigma);
-
-else
-    error('Input matrix must be either 3D with Eigenvectors and Eigenvalues or a symmetric matrx.')
+if nargin < 3 || isempty(sigma)
+    sigma = 1:nroi;
 end
 
+D = sum(A, 1);
+nroi = length(D);
+sqrt_D_inv = diag(1./sqrt(D));
+sqrt_D = diag(sqrt(D));
+
+L = eye(nroi) - sqrt_D_inv * A * sqrt_D_inv ;
+
+[U, ev] = eig(L);
+ev = diag(ev);
+[~, ii] = sort(ev, 'ascend');
+ev = ev(ii);
+ev = ev(sigma);
+U = U(:,ii);
+U = U(:, sigma);
+
+
 Harmonic_stack = zeros(nroi, nroi, nroi);
-% D_stack = zeros(nroi, nroi);
 
 if mean(weights) < 1.01
     
     for i = 1:nroi
         Harmonic_stack(:,:,i) = weights(i) * ev(i) * (U(:,i) * U(:,i)');
-        % D_stack(:,i) = diag(Harmonic_stack(:,:,i));
     end
 
-    % D_trunc = diag(sum(D_stack,2));
-    % sqrt_D = diag(sqrt(diag(D_trunc)));
     FilteredNetwork = -1*(sqrt_D * sum(Harmonic_stack, 3) * sqrt_D).*~eye(nroi);
 
 else
@@ -102,25 +87,13 @@ else
     FilteredNetwork = zeros(nroi, nroi, length(n));
 
     Harmonic_stack = zeros(nroi, nroi, nroi);
-    % D_stack = zeros(nroi, nroi);
 
     for i = 1:nroi
         Harmonic_stack(:,:,i) = ev(i) * (U(:,i) * U(:,i)');
-        % D_stack(:,i) = diag(Harmonic_stack(:,:,i));
     end
 
     for c = 1:length(n)
-
-        % idx = find(weights == c);
-
-        % D_trunc = diag(sum(D_stack(:,idx),2));
-        % D_trunc = diag(D)*diag(sum(D_stack(:,idx),2));
-
-        % sqrt_D = diag(sqrt(diag(D_trunc)));
-        
-
         FilteredNetwork(:,:,c) = -1*(sqrt_D * sum(Harmonic_stack(:,:,weights == c), 3) * sqrt_D).*~eye(nroi);
-
     end
 
 end

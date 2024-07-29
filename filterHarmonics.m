@@ -1,32 +1,31 @@
 function FilteredNetwork = filterHarmonics(A, weights, sigma, rm_neg)
 %filterHarmonics filters a network based on its Laplacian harmonics.
-%   Usage: FilteredNetwork = filterHarmonics(A, weights, sigma)
-%          FilteredNetwork = filterHarmonics(cat(3,U,diag(ev)), weights, sigma)
+% 
+%   Usage: FilteredNetwork = filterHarmonics(A, weights, sigma, rm_neg)
 % 
 %   Inputs:
 %       A: a network's adjacency matrix (must be square and symmetric).
-% 
 %       weights: a vector the same length as A defining one of two possible
-%       filtring schemes
+%           filtring schemes:
 %           option 1: categorical weighting. Divides A into N networks
 %           based on the interger harmonic assignments in weights.
 %           unique(weights) must be equal to 1:N
 %           option 2: continuous weighting. Reutrns 1 network where
 %           harmonics are weighted based on the weights vector.
 %           mean(weights) must be equal to 1.
-% 
 %       sigma: (optional) a vector defining a permutation for harmonics
-%       from ascending order to another ordering.
-%       
-%       rm_neg: (bool) Removes remaining negative weights in filtered networks.
-%           (default: true)
+%           from ascending order to another ordering.
+%       rm_neg: (bool, optional) Removes remaining negative weights in 
+%           filtered networks. (default: true)
 % 
 %   Outputs:
 %       FilteredNetwork: a network the same number of rows/columns as A,
 %       except filtered according to the above. 
-%       If weighting was categorical, FilteredNetworks has each category 
-%       along the 3rd dimension.
-%       If weighting was continuous, only one network is returned.
+%   If weighting was categorical, FilteredNetworks has each category 
+%   along the 3rd dimension.
+%   If weighting was continuous, only one network is returned.
+% 
+% Written by Benjamin Sipes March 2024
 
 
 [sz] = size(A);
